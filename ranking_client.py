@@ -4,7 +4,10 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from urllib.request import urlopen
 from zoneinfo import ZoneInfo
-from pymongo import MongoClient
+from models.database_models import (
+    AlgorithmHoldings, PointsTally, Rank, TimeDelta,
+    MarketStatus, HistoricalData, NasdaqTicker
+)
 import time
 from datetime import datetime, timedelta
 import alpaca
@@ -106,7 +109,7 @@ def process_ticker(ticker, mongo_client):
    except Exception as e:
       logging.error(f"Error in thread for {ticker}: {e}")
 
-def simulate_trade(ticker, strategy, historical_data, current_price, account_cash, portfolio_qty, total_portfolio_value, mongo_client):
+def simulate_trade(ticker, strategy, historical_data, current_price, account_cash, portfolio_qty, total_portfolio_value):
    """
    Simulates a trade based on the given strategy and updates MongoDB.
    """
@@ -115,16 +118,10 @@ def simulate_trade(ticker, strategy, historical_data, current_price, account_cas
    print(f"Simulating trade for {ticker} with strategy {strategy.__name__} and quantity of {portfolio_qty}")
    action, quantity = simulate_strategy(strategy, ticker, current_price, historical_data, account_cash, portfolio_qty, total_portfolio_value)
    
-   # MongoDB setup
-   
-   db = mongo_client.trading_simulator
-   holdings_collection = db.algorithm_holdings
-   points_collection = db.points_tally
-   
-   # Find the strategy document in MongoDB
-   strategy_doc = holdings_collection.find_one({"strategy": strategy.__name__})
-   holdings_doc = strategy_doc.get("holdings", {})
-   time_delta = db.time_delta.find_one({})['time_delta']
+   # Find the strategy document using Bunnet
+   strategy_doc = AlgorithmHoldings.find_one({"strategy": strategy.__name__})
+   holdings_doc = strategy_doc.holdings if strategy_doc else {}
+   time_delta = TimeDelta.find_one({}).time_delta
    
    
    # Update holdings and cash based on trade action
@@ -146,18 +143,11 @@ def simulate_trade(ticker, strategy, historical_data, current_price, account_cas
       }
 
       # Deduct the cash used for buying and increment total trades
-      holdings_collection.update_one(
-         {"strategy": strategy.__name__},
-         {
-            "$set": {
-                  "holdings": holdings_doc,
-                  "amount_cash": strategy_doc["amount_cash"] - quantity * current_price,
-                  "last_updated": datetime.now()
-            },
-            "$inc": {"total_trades": 1}
-         },
-         upsert=True
-      )
+      strategy_doc.holdings = holdings_doc
+      strategy_doc.amount_cash = strategy_doc.amount_cash - quantity * current_price
+      strategy_doc.last_updated = datetime.now()
+      strategy_doc.total_trades += 1
+      strategy_doc.save()
       
 
    elif action in ["sell"] and str(ticker) in holdings_doc and holdings_doc[str(ticker)]["quantity"] > 0:
@@ -175,11 +165,8 @@ def simulate_trade(ticker, strategy, historical_data, current_price, account_cas
 
       if current_price > holdings_doc[ticker]["price"]:
          #increment successful trades
-         holdings_collection.update_one(
-            {"strategy": strategy.__name__},
-            {"$inc": {"successful_trades": 1}},
-            upsert=True
-         )
+         strategy_doc.successful_trades += 1
+         strategy_doc.save()
          
          # Calculate points to add if the current price is higher than the purchase price
          if price_change_ratio < 1.05:
@@ -192,18 +179,13 @@ def simulate_trade(ticker, strategy, historical_data, current_price, account_cas
       else:
          # Calculate points to deduct if the current price is lower than the purchase price
          if holdings_doc[ticker]["price"] == current_price:
-            holdings_collection.update_one(
-               {"strategy": strategy.__name__},
-               {"$inc": {"neutral_trades": 1}}
-            )
+            strategy_doc.neutral_trades += 1
+            strategy_doc.save()
             
          else:   
             
-            holdings_collection.update_one(
-               {"strategy": strategy.__name__},
-               {"$inc": {"failed_trades": 1}},
-               upsert=True
-            )
+            strategy_doc.failed_trades += 1
+            strategy_doc.save()
          
          if price_change_ratio > 0.975:
             points = -time_delta * 1
@@ -213,16 +195,11 @@ def simulate_trade(ticker, strategy, historical_data, current_price, account_cas
             points = -time_delta * 2
          
       # Update the points tally
-      points_collection.update_one(
-         {"strategy": strategy.__name__},
-         {
-            "$set" : {
-               "last_updated": datetime.now()
-            },
-            "$inc": {"total_points": points}
-         },
-         upsert=True
-      )
+      points_doc = PointsTally.find_one({"strategy": strategy.__name__})
+      if points_doc:
+          points_doc.last_updated = datetime.now()
+          points_doc.total_points += points
+          points_doc.save()
       if holdings_doc[ticker]["quantity"] == 0:      
          del holdings_doc[ticker]
       # Update cash after selling
