@@ -1,14 +1,14 @@
-from beanie import Document, Indexed
+from bunnet import Document, Indexed
 from typing import Dict, Optional
 from datetime import datetime
 from pydantic import BaseModel
 
-class Holdings(BaseModel):
+class Holdings(Document):
     quantity: float
     price: float
 
 class AlgorithmHoldings(Document):
-    strategy: Indexed(str)
+    strategy: str = Indexed()
     holdings: Dict[str, Holdings] = {}
     amount_cash: float = 50000
     initialized_date: datetime
@@ -23,7 +23,7 @@ class AlgorithmHoldings(Document):
         name = "algorithm_holdings"
 
 class PointsTally(Document):
-    strategy: Indexed(str)
+    strategy: str = Indexed()
     total_points: float = 0
     initialized_date: datetime
     last_updated: datetime
@@ -32,14 +32,14 @@ class PointsTally(Document):
         name = "points_tally"
 
 class Rank(Document):
-    strategy: Indexed(str)
+    strategy: str = Indexed()
     rank: int
 
     class Settings:
         name = "rank"
 
 class RankToCoefficient(Document):
-    rank: Indexed(int)
+    rank: int = Indexed()
     coefficient: float
 
     class Settings:
@@ -65,21 +65,21 @@ class PortfolioValue(Document):
         name = "portfolio_values"
 
 class Indicator(Document):
-    indicator: Indexed(str)
+    indicator: str = Indexed()
     ideal_period: str
 
     class Settings:
         name = "indicators"
 
 class AssetsQuantity(Document):
-    symbol: Indexed(str)
+    symbol: str = Indexed()
     quantity: float
 
     class Settings:
         name = "assets_quantities"
 
 class AssetsLimit(Document):
-    symbol: Indexed(str)
+    symbol: str = Indexed()
     stop_loss_price: float
     take_profit_price: float
 
@@ -87,7 +87,7 @@ class AssetsLimit(Document):
         name = "assets_limit"
 
 class HistoricalData(Document):
-    symbol: Indexed(str)
+    symbol: str = Indexed()
     data: Dict
     last_updated: datetime
 
