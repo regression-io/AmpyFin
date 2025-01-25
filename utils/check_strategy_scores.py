@@ -10,6 +10,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Initialize MongoDB client
+client = None
 try:
     logger.info("Connecting to MongoDB...")
     from models.database_models import PointsTally, AlgorithmHoldings, Rank

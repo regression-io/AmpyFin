@@ -110,8 +110,10 @@ def get_ndaq_tickers(FINANCIAL_PREP_API_KEY):
             NasdaqTicker(symbol=stock['symbol']).save()
             
         tickers = [stock.symbol for stock in NasdaqTicker.find_all()]
-    
-    return tickers
+        return tickers
+    except Exception as e:
+        logging.error(f"Error retrieving NASDAQ tickers: {e}")
+        return []
 
 # Market status checker helper
 def market_status(polygon_client):

@@ -14,6 +14,7 @@ def sync_positions():
     """
     Sync MongoDB trades database with actual Alpaca long positions only
     """
+    mongo_client = None
     try:
         trading_client = TradingClient(API_KEY, API_SECRET, paper=True)
         from models.database_models import AssetsQuantity, PortfolioValue
