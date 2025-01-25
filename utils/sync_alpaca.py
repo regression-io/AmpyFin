@@ -16,7 +16,7 @@ def sync_positions():
     """
     try:
         trading_client = TradingClient(API_KEY, API_SECRET, paper=True)
-        mongo_client = MongoClient(mongo_url, tlsCAFile=certifi.where())
+        mongo_client = MongoClient(mongo_url)
         db = mongo_client.trades
         print("\nCurrent MongoDB positions:")
         mongo_positions = {}
