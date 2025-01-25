@@ -349,7 +349,7 @@ def main():
    
    
    while True: 
-      mongo_client = MongoClient(mongo_url, tlsCAFile=ca)
+      mongo_client = MongoClient(mongo_url)
       status = mongo_client.market_data.market_status.find_one({})["market_status"]
       
       if status == "open":  
