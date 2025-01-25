@@ -1,4 +1,4 @@
-from bunnet import Document, Indexed
+from bunnet import Document, Indexed, PydanticObjectId
 from typing import Dict, Optional
 from datetime import datetime
 from pydantic import BaseModel
