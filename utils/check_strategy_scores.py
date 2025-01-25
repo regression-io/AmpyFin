@@ -12,20 +12,16 @@ logger = logging.getLogger(__name__)
 
 try:
     logger.info("Connecting to MongoDB...")
-    client = MongoClient(mongo_url)
-    db = client.trading_simulator
+    from models.database_models import PointsTally, AlgorithmHoldings, Rank
 
     logger.info("Fetching points tally...")
-    points_collection = db.points_tally
-    points_data = list(points_collection.find())
+    points_data = list(PointsTally.find_all())
 
     logger.info("Fetching algorithm holdings...")
-    holdings_collection = db.algorithm_holdings
-    holdings_data = list(holdings_collection.find())
+    holdings_data = list(AlgorithmHoldings.find_all())
 
     logger.info("Fetching rankings...")
-    rank_collection = db.rank
-    rank_data = list(rank_collection.find())
+    rank_data = list(Rank.find_all())
 
     print("\nStrategy Points:")
     print("-" * 80)

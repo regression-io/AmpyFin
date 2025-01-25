@@ -16,12 +16,11 @@ def sync_positions():
     """
     try:
         trading_client = TradingClient(API_KEY, API_SECRET, paper=True)
-        mongo_client = MongoClient(mongo_url)
-        db = mongo_client.trades
+        from models.database_models import AssetsQuantity, PortfolioValue
         print("\nCurrent MongoDB positions:")
         mongo_positions = {}
-        for doc in db.assets_quantities.find():
-            mongo_positions[doc['symbol']] = doc['quantity']
+        for doc in AssetsQuantity.find():
+            mongo_positions[doc.symbol] = doc.quantity
             print(f"  {doc['symbol']}: {doc['quantity']}")
         
         print("\nCurrent Alpaca long positions:")
@@ -52,22 +51,23 @@ def sync_positions():
         # Update MongoDB to match Alpaca long positions
         if input("\nUpdate MongoDB to match Alpaca long positions? (y/n): ").lower() == 'y':
             # Clear existing positions
-            db.assets_quantities.delete_many({})
+            AssetsQuantity.delete_many({})
 
+            # Insert new positions
             for symbol, quantity in alpaca_holdings.items():
-                db.assets_quantities.insert_one({
-                    "symbol": symbol,
-                    "quantity": quantity
-                })
+                AssetsQuantity(
+                    symbol=symbol,
+                    quantity=quantity
+                ).save()
 
             account = trading_client.get_account()
             portfolio_value = float(account.portfolio_value)
             
             # Update portfolio value
-            db.portfolio_values.insert_one({
-                "name": "portfolio_percentage",
-                "portfolio_value": portfolio_value
-            })
+            PortfolioValue(
+                name="portfolio_percentage",
+                portfolio_value=portfolio_value
+            ).save()
             
             print("\nMongoDB updated successfully with long positions")
             print(f"Portfolio Value: ${portfolio_value:,.2f}")

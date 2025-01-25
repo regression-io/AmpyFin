@@ -93,3 +93,9 @@ class HistoricalData(Document):
 
     class Settings:
         name = "historical_data"
+
+class NasdaqTicker(Document):
+    symbol: str = Indexed()
+
+    class Settings:
+        name = "ndaq100_tickers"

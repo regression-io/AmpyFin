@@ -12,9 +12,7 @@ import time
 def test_strategies():
    
    # Initialize the StockHistoricalDataClient  
-   mongo_client = MongoClient() 
-   tickers = get_ndaq_tickers(mongo_url, FINANCIAL_PREP_API_KEY)
-   mongo_client.close()
+   tickers = get_ndaq_tickers(FINANCIAL_PREP_API_KEY)
    """
    periods = ['1d', '5d','1mo', '3mo', '6mo', '1y', '2y', '5y', 'ytd', 'max']
    account_cash = 50000
