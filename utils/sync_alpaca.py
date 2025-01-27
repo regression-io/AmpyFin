@@ -17,7 +17,7 @@ def sync_positions():
     mongo_client = None
     try:
         trading_client = TradingClient(API_KEY, API_SECRET, paper=True)
-        from models.database_models import AssetsQuantity, PortfolioValue
+        from database.models import AssetsQuantity, PortfolioValue
         print("\nCurrent MongoDB positions:")
         mongo_positions = {}
         for doc in AssetsQuantity.find():
@@ -52,7 +52,7 @@ def sync_positions():
         # Update MongoDB to match Alpaca long positions
         if input("\nUpdate MongoDB to match Alpaca long positions? (y/n): ").lower() == 'y':
             # Clear existing positions
-            AssetsQuantity.delete_many({})
+            AssetsQuantity.delete()
 
             # Insert new positions
             for symbol, quantity in alpaca_holdings.items():

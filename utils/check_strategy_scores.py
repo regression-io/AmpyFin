@@ -3,6 +3,8 @@ from pymongo import MongoClient
 from config import mongo_url
 from datetime import datetime
 
+from database.models import PointsTally, AlgorithmHoldings, Rank
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -14,7 +16,6 @@ logger = logging.getLogger(__name__)
 client = None
 try:
     logger.info("Connecting to MongoDB...")
-    from models.database_models import PointsTally, AlgorithmHoldings, Rank
 
     logger.info("Fetching points tally...")
     points_data = list(PointsTally.find_all())

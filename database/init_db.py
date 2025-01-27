@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 from bunnet import init_bunnet
-from models.database_models import *
+from database.models import *
 from config import mongo_url
 
 def init_database():

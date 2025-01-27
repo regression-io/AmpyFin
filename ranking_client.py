@@ -4,7 +4,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from urllib.request import urlopen
 from zoneinfo import ZoneInfo
-from models.database_models import (
+from database.models import (
     AlgorithmHoldings, PointsTally, Rank, TimeDelta,
     MarketStatus, HistoricalData, NasdaqTicker
 )
